@@ -54,18 +54,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setMyLocationEnabled(true);
 
 
-
-
-        //Add marker dot at current location and move the camera
-
-      //use getLastLocation() ??
-
     }
     public void switchView(View v){
         if(mMap.getMapType() == GoogleMap.MAP_TYPE_SATELLITE) {
             mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         }
+        else if (mMap.getMapType() == GoogleMap.MAP_TYPE_NORMAL) {
             mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+        }
     }
 }
 
