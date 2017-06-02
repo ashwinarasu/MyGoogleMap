@@ -2,14 +2,18 @@ package com.example.arasua6707.mygooglemap;
 
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.gms.location.LocationListener;
@@ -23,6 +27,11 @@ import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import java.io.IOException;
+import java.lang.reflect.Array;
+import java.util.Collections;
+import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
     private GoogleMap mMap;
@@ -81,6 +90,37 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+
+    public void poiSearch(View v) {
+        EditText search = (EditText) findViewById(R.id.searchBox);
+        String poi = search.getText().toString();
+        List<Address> addresses = null;
+        List<Float> dists = null;
+        float [] distances = new float[1];
+        int minIndex;
+
+        if (poi != null || !poi.equals(" ")) {
+            Geocoder geocoder = new Geocoder(this);
+            try {
+                addresses = geocoder.getFromLocationName(poi, 2017);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            for (int i = 0; i < addresses.size(); i++) {
+                myLocation.distanceBetween(myLocation.getLatitude(), myLocation.getLongitude(), addresses.get(i).getLatitude(), addresses.get(i).getLongitude(), distances);
+                dists.set(i, distances[0]);
+
+            }
+            minIndex = dists.indexOf(Collections.min(dists));
+            Address address = addresses.get(minIndex);
+
+            LatLng coords = new LatLng(address.getLatitude(), address.getLongitude());
+            mMap.addMarker(new MarkerOptions().position(coords).title("Search Results"));
+            mMap.animateCamera(CameraUpdateFactory.newLatLng(coords));
+
+        }
+    }
+
     public void getLocation() {
         try {
             locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -129,7 +169,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         @Override
         public void onLocationChanged(Location location) {
             //output message in Log.d and Toast
+            Log.d("My Maps", "GPS Location changed");
+            Toast.makeText(MapsActivity.this, "GPS Location Changed", Toast.LENGTH_SHORT).show();
             //drop a marker on the map (create a method called dropAmarker)
+            dropAmarker(LocationManager.GPS_PROVIDER);
+
+            if (ActivityCompat.checkSelfPermission(MapsActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MapsActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return;
+            }
+            locationManager.removeUpdates(locationListenerNetwork);
         }
 
         @Override
@@ -138,6 +193,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             //case: LocationProvider.AVAILABLE --> output message
             //case: LocationProvider.OUT_OF_SERVICE --> request updates from NETWORK_PROVIDER
             //case: Location.Provider.TEMPORARILY_UNAVAILABLE --> request updates from NETWORK_PROVIDER
+            switch (status) {
+                case LocationProvider.AVAILABLE:
+                    Log.d("MyMaps", "location provider available");
+                    break;
+                case LocationProvider.OUT_OF_SERVICE:
+                    if (ActivityCompat.checkSelfPermission(MapsActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MapsActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        // TODO: Consider calling
+                        //    ActivityCompat#requestPermissions
+                        // here to request the missing permissions, and then overriding
+                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                        //                                          int[] grantResults)
+                        // to handle the case where the user grants the permission. See the documentation
+                        // for ActivityCompat#requestPermissions for more details.
+                        return;
+                    }
+                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, MIN_TIME_BW_UPDATES, MIN_DISTANCE_BW_UPDATES, locationListenerNetwork);
+
+                    break;
+                case LocationProvider.TEMPORARILY_UNAVAILABLE:
+                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, MIN_TIME_BW_UPDATES, MIN_DISTANCE_BW_UPDATES, locationListenerNetwork);
+                    break;
+                default:
+                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, MIN_TIME_BW_UPDATES, MIN_DISTANCE_BW_UPDATES, locationListenerNetwork);
+                    break;
+            }
         }
 
         @Override
@@ -153,13 +233,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         @Override
         public void onLocationChanged(Location location) {
             //output message in Log.d and Toast
-            //drop a marker on the map (create a method called dropAmarker)
+            Log.d("MyMaps", "Network location changed");
+            Toast.makeText(MapsActivity.this, "Network location changed", Toast.LENGTH_SHORT).show();
+            //drop a marker
+            dropAmarker(LocationManager.NETWORK_PROVIDER);
             //relaunch request for network location updates (requestLocationUpdates(NETWORK_PROVIDER)
         }
 
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras) {
             //output Log.d and Toast
+            Log.d("MyMaps", "Network onStatusChanged called");
+            Toast.makeText(MapsActivity.this, "Network onStatusChanged has been called", Toast.LENGTH_SHORT).show();
+
+
         }
 
         @Override
@@ -189,14 +276,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             myLocation = locationManager.getLastKnownLocation(provider);
         }
         if(myLocation == null){
-            //display message in Log.d and Toast
+            //display message in Log.d and Toast: DONE
+            Log.d("MyMaps", "my location is null");
+            Toast.makeText(this, "unanle to find location", Toast.LENGTH_SHORT);
         } else {
             userLocation = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
 
             //display message in Log.d and Toast
+            Log.d("MyMaps", "Current Location is" + userLocation);
+            Toast.makeText(this, "Current Coordinates: " + myLocation.getLatitude()+ ", " + myLocation.getLongitude(), Toast.LENGTH_SHORT);
             CameraUpdate update = CameraUpdateFactory.newLatLngZoom(userLocation, MY_LOC_ZOOM_FACTOR);
 
-            //Add a shape for your marke
+            //Add a shape for your marker
             Circle circle = mMap.addCircle(new CircleOptions()
                     .center(userLocation)
                     .radius(1)
