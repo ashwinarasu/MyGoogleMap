@@ -94,13 +94,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void poiSearch(View v) {
         EditText search = (EditText) findViewById(R.id.searchBox);
         String poi = search.getText().toString();
-        List<Address> addresses = null;
+        List<android.location.Address> addresses = null;
         List<Float> dists = null;
         float [] distances = new float[1];
         int minIndex;
 
-        if (poi != null || !poi.equals(" ")) {
+        if (poi != null || !poi.equals("")) {
             Geocoder geocoder = new Geocoder(this);
+            Log.d("MyMaps", "got to poi if");
             try {
                 addresses = geocoder.getFromLocationName(poi, 2017);
             } catch (IOException e) {
@@ -278,7 +279,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if(myLocation == null){
             //display message in Log.d and Toast: DONE
             Log.d("MyMaps", "my location is null");
-            Toast.makeText(this, "unanle to find location", Toast.LENGTH_SHORT);
+            Toast.makeText(this, "unable to find location", Toast.LENGTH_SHORT);
         } else {
             userLocation = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
 
