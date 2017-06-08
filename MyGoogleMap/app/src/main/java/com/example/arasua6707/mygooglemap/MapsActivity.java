@@ -43,6 +43,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private static final float MIN_DISTANCE_BW_UPDATES = 5.0f;
     private Location myLocation;
     private static final float MY_LOC_ZOOM_FACTOR = 17.0f;
+    private boolean isTracked = false;
 
 
     @Override
@@ -298,6 +299,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             mMap.animateCamera(update);
         }
+    }
+    public void clearAllMarkers(View v){
+        mMap.clear();
     }
 
 }
