@@ -27,7 +27,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/searchBox"
-            android:layout_weight="0.94" />
+            android:layout_weight="0.48" />
 
         <Button
             android:layout_width="wrap_content"
@@ -41,18 +41,19 @@
 
     <Button
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Clear"
-        android:id="@+id/button_clear"
-        android:layout_gravity="center_horizontal"
-        android:nestedScrollingEnabled="true"
-        android:onClick="clearAllMarkers" />
+        android:layout_height="37dp"
+        android:text="TRACK"
+        android:id="@+id/button_track"
+        android:onClick="dropAMarker" />
 
     <Button
         android:layout_width="wrap_content"
-        android:layout_height="37dp"
-        android:text="TRACK"
-        android:id="@+id/button_track" />
+        android:layout_height="wrap_content"
+        android:text="Clear Markers"
+        android:id="@+id/button_clear"
+        android:layout_gravity="right"
+        android:nestedScrollingEnabled="true"
+        android:onClick="clearAllMarkers" />
 
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:map="http://schemas.android.com/apk/res-auto"
